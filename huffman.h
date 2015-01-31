@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include "objstorage.h"
 
 
@@ -14,7 +15,16 @@ enum { ByteTypeCountValues = 256 };
 //
 //
 
-typedef std::pair<unsigned int, unsigned int> CodeLength;
+struct CodeLength
+{
+public:
+    CodeLength() : code(0), length(0) {}
+    CodeLength(unsigned int Code, unsigned int Length) : code(Code), length(Length) {}
+    unsigned int code;
+    unsigned int length;
+};
+
+bool operator==(const CodeLength& a, const CodeLength& b);
 
 //
 //
@@ -24,7 +34,7 @@ class HuffmanCodeTable
 {
 public:
     HuffmanCodeTable();
-    HuffmanCodeTable(std::vector<CodeLength>&& codes);
+    HuffmanCodeTable(std::unordered_map<unsigned char, CodeLength>&& codes);
     HuffmanCodeTable(HuffmanCodeTable&& other);
     HuffmanCodeTable(const HuffmanCodeTable& other);
     HuffmanCodeTable& operator=(HuffmanCodeTable&& other);
@@ -36,7 +46,7 @@ public:
     void swap(HuffmanCodeTable& other);
     
 private:
-    std::vector<CodeLength> m_codes;
+    std::unordered_map<unsigned char, CodeLength> m_codes;
 };
 
 //

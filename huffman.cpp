@@ -14,14 +14,24 @@ enum { BitLeft = 1, BitRight = 0 };
 //
 //
 
+static const CodeLength ZeroCodeLength;
+
+bool operator==(const CodeLength& a, const CodeLength& b)
+{
+    return (a.code == b.code && a.length == b.length);
+}
+
+//
+//
+//
+
 HuffmanCodeTable::HuffmanCodeTable()
 : m_codes(ByteTypeCountValues)
 {}
 
-HuffmanCodeTable::HuffmanCodeTable(std::vector<CodeLength>&& codes)
+HuffmanCodeTable::HuffmanCodeTable(std::unordered_map<unsigned char, CodeLength>&& codes)
 : m_codes(std::move(codes))
 {
-    assert(ByteTypeCountValues == m_codes.size());
 }
 
 HuffmanCodeTable::HuffmanCodeTable(HuffmanCodeTable&& other)
@@ -52,7 +62,9 @@ void HuffmanCodeTable::SetCodeLength(unsigned char b, const CodeLength& codeLeng
 
 const CodeLength& HuffmanCodeTable::GetCodeLength(unsigned char b) const
 {
-    return m_codes[b];
+    auto i = m_codes.find(b);
+    if (m_codes.end() == i) return ZeroCodeLength;
+    else return i->second;
 }
 
 void HuffmanCodeTable::swap(HuffmanCodeTable& other)
@@ -112,7 +124,7 @@ void HuffmanScanner::EndScan(HuffmanCodeTable& table, unsigned int& totalLen)
             if (0 != m_bytes[i])
             {
                 const CodeLength& codeLen = table.GetCodeLength(static_cast<unsigned char>(i));
-                totalLen += m_bytes[i] * codeLen.second;
+                totalLen += m_bytes[i] * codeLen.length;
             }
         }
     }
@@ -169,8 +181,8 @@ HuffmanCodeTable HuffmanScanner::BuildCodesTable()
     Node* root = v[v.size() - 1];
     v.clear();
     
-    std::vector<CodeLength> codes;
-    codes.resize(ByteTypeCountValues);
+    std::unordered_map<unsigned char, CodeLength> codes;
+    codes.reserve(m_count);
     
     std::stack<NodeCodeLength> s;
     NodeCodeLength n;
@@ -200,7 +212,7 @@ HuffmanCodeTable HuffmanScanner::BuildCodesTable()
         }
         if (nullptr == n.node->left && nullptr == n.node->right)
         {
-            assert(CodeLength(0, 0) == codes[n.node->value]);
+            assert(ZeroCodeLength == codes[n.node->value]);
             assert(n.len > 0);
             codes[n.node->value] = CodeLength(n.code, n.len);
         }
@@ -236,9 +248,9 @@ HuffmanReader::HuffmanReader(const HuffmanCodeTable& codes)
         
         const unsigned char b = static_cast<unsigned char>(i);
         const CodeLength& codeLength = codes.GetCodeLength(b);
-        for (unsigned int j = 0; j < codeLength.second; ++j)
+        for (unsigned int j = 0; j < codeLength.length; ++j)
         {
-            unsigned int bit = (codeLength.first >> j) & 1;
+            unsigned int bit = (codeLength.code >> j) & 1;
             if (BitLeft == bit)
             {
                 if (nullptr == n->left) n->left = storage.NewObject();

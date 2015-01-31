@@ -21,18 +21,18 @@ static void CompressHuffmanCodesTable(BitStreamWriter& w, const HuffmanCodeTable
     {
         const unsigned char b = static_cast<unsigned char>(i);
         const CodeLength& codeLen = codes.GetCodeLength(b);
-        if (codeLen.second != 0)
+        if (codeLen.length != 0)
         {
             ++cnt;
             
             if (b < minValue) minValue = b;
             else if (maxValue < b) maxValue = b;
             
-            if (codeLen.first < minCode) minCode = codeLen.first;
-            else if (maxCode < codeLen.first) maxCode = codeLen.first;
+            if (codeLen.code < minCode) minCode = codeLen.code;
+            else if (maxCode < codeLen.code) maxCode = codeLen.code;
             
-            if (codeLen.second < minLen) minLen = codeLen.second;
-            else if (maxLen < codeLen.second) maxLen = codeLen.second;
+            if (codeLen.length < minLen) minLen = codeLen.length;
+            else if (maxLen < codeLen.length) maxLen = codeLen.length;
         }
     }
     
@@ -57,11 +57,11 @@ static void CompressHuffmanCodesTable(BitStreamWriter& w, const HuffmanCodeTable
     {
         const unsigned char b = static_cast<unsigned char>(i);
         const CodeLength& codeLen = codes.GetCodeLength(b);
-        if (codeLen.second != 0)
+        if (codeLen.length != 0)
         {
             unsigned char wb = b - minValue;
-            unsigned int wc = codeLen.first - minCode;
-            unsigned int wl = codeLen.second - minLen;
+            unsigned int wc = codeLen.code - minCode;
+            unsigned int wl = codeLen.length - minLen;
             check_true( w.WriteBits(&wb, valueBits) );
             check_true( w.WriteBits(&wc, codeBits) );
             check_true( w.WriteBits(&wl, lenBits) );
@@ -154,7 +154,7 @@ Compressor::Result Compressor::Compress(const char* source, const char* dest)
             ForEachByteInFile(fileIn.get(), [&](unsigned char b)
                               {
                                   const CodeLength& cl = codes.GetCodeLength(b);
-                                  check_true( w.WriteBits(&cl.first, cl.second) );
+                                  check_true( w.WriteBits(&cl.code, cl.length) );
                               });
             
             check_true( w.CompleteByte() );
