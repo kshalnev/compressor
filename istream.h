@@ -15,6 +15,17 @@ public:
 //
 //
 
+class IReadStream : public ISequentialReadStream
+{
+public:
+    virtual unsigned int GetPos() = 0;
+    virtual bool Seek(unsigned int pos) = 0;
+};
+
+//
+//
+//
+
 class ISequentialWriteStream
 {
 public:

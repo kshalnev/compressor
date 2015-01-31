@@ -104,56 +104,42 @@ static void DecompressHuffmanCodesTable(BitStreamReader& r, HuffmanCodeTable& co
     }
 }
 
-template <typename F>
-inline void ForEachByteInFile(FILE* file, F f, size_t buffSize = 2048)
-{
-    std::vector<unsigned char> buff(buffSize);
-    size_t res = 0;
-    check_true( 0 == fseek(file, 0, SEEK_SET) );
-    while ((res = fread(&buff[0], 1, buff.size(), file)) > 0)
-    {
-        std::for_each(buff.begin(), buff.begin() + res, f);
-    }
-    check_true( feof(file) );
-}
-
-static void Compress(FILE* source, FILE* dest)
+static void Compress(IReadStream& source, ISequentialWriteStream& dest)
 {
     HuffmanCodeTable codes;
     unsigned int cntBits = 0;
+
+    check_true( source.Seek(0) );
     
     {
         HuffmanScanner scanner;
-        
         scanner.BeginScan();
-        
-        ForEachByteInFile(source, [&](unsigned char b){ scanner.Scan(b); });
-        
+        for (unsigned char b = 0; source.Read(&b, sizeof(b));) scanner.Scan(b);
         scanner.EndScan(codes, cntBits);
     }
     
+    check_true( source.Seek(0) );
+    
     {
-        FileSequentialWriteStream ws(dest);
-        BitStreamWriter w(&ws);
+        BitStreamWriter w(&dest);
         
         CompressHuffmanCodesTable(w, codes);
         
         check_true( w.WriteBits(&cntBits, BitsPerByte * sizeof(cntBits)) );
         
-        ForEachByteInFile(source, [&](unsigned char b)
-                          {
-                              const CodeLength& cl = codes.GetCodeLength(b);
-                              check_true( w.WriteBits(&cl.code, cl.length) );
-                          });
+        for (unsigned char b = 0; source.Read(&b, sizeof(b));)
+        {
+            const CodeLength& cl = codes.GetCodeLength(b);
+            check_true( w.WriteBits(&cl.code, cl.length) );
+        }
         
         check_true( w.CompleteByte() );
     }
 }
 
-static void Decompress(FILE* source, FILE* dest)
+static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
 {
-    FileSequentialReadStream rs(source);
-    BitStreamReader r(&rs);
+    BitStreamReader r(&source);
     
     HuffmanCodeTable codes;
     DecompressHuffmanCodesTable(r, codes);
@@ -170,8 +156,7 @@ static void Decompress(FILE* source, FILE* dest)
         unsigned char value = 0;
         if (HuffmanReader::Success == (res = reader.ReadBit(bit, &value)))
         {
-            size_t n = fwrite(&value, 1, sizeof(value), dest);
-            check_true( n == sizeof(value) );
+            check_true( dest.Write(&value, sizeof(value)) );
         }
     }
     
@@ -192,7 +177,9 @@ bool Huffman::Compress(const char* source, const char* dest)
     
     try
     {
-        ::Compress(fileIn.get(), fileOut.get());
+        FileReadStream rs(fileIn.get());
+        FileSequentialWriteStream ws(fileOut.get());
+        ::Compress(rs, ws);
     }
     catch (std::exception&)
     {
@@ -216,7 +203,9 @@ bool Huffman::Decompress(const char* source, const char* dest)
     
     try
     {
-        ::Decompress(fileIn.get(), fileOut.get());
+        FileReadStream rs(fileIn.get());
+        FileSequentialWriteStream ws(fileOut.get());
+        ::Decompress(rs, ws);
     }
     catch (std::exception&)
     {

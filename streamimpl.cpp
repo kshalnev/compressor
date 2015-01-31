@@ -25,14 +25,14 @@ bool ByteArraySequentialWriteStream::Write(const void* data, unsigned int size)
 //
 //
 
-ByteArraySequentialReadStream::ByteArraySequentialReadStream(std::vector<unsigned char>* buff)
+ByteArrayReadStream::ByteArrayReadStream(std::vector<unsigned char>* buff)
 : m_buff(buff)
 , m_index(0)
 {
     assert(nullptr != buff);
 }
 
-bool ByteArraySequentialReadStream::Read(void* data, unsigned int size)
+bool ByteArrayReadStream::Read(void* data, unsigned int size)
 {
     assert(nullptr != data);
     
@@ -45,6 +45,19 @@ bool ByteArraySequentialReadStream::Read(void* data, unsigned int size)
     unsigned char* b = reinterpret_cast<unsigned char*>(data);
     std::copy(m_buff->begin() + m_index, m_buff->begin() + m_index + size, b);
     m_index += size;
+    return true;
+}
+
+unsigned int ByteArrayReadStream::GetPos()
+{
+    return m_index;
+}
+
+bool ByteArrayReadStream::Seek(unsigned int pos)
+{
+    if (pos >= m_buff->size())
+        return false;
+    m_index = pos;
     return true;
 }
 
@@ -70,16 +83,28 @@ bool FileSequentialWriteStream::Write(const void* data, unsigned int size)
 //
 //
 
-FileSequentialReadStream::FileSequentialReadStream(FILE* file)
+FileReadStream::FileReadStream(FILE* file)
 : m_file(file)
 {
     assert(nullptr != file);
 }
 
-bool FileSequentialReadStream::Read(void* data, unsigned int size)
+bool FileReadStream::Read(void* data, unsigned int size)
 {
     assert(nullptr != data);
     
     size_t res = fread(data, 1, size, m_file);
     return (size == res);
+}
+
+unsigned int FileReadStream::GetPos()
+{
+    const long pos = ftell(m_file);
+    if (pos < 0) return false;
+    return static_cast<unsigned int>(pos);
+}
+
+bool FileReadStream::Seek(unsigned int pos)
+{
+    return (0 == fseek(m_file, pos, SEEK_SET));
 }

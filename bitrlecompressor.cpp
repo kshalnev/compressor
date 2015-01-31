@@ -37,35 +37,23 @@ static BitRleTable DecompressBitRleTable(BitStreamReader& r)
     return BitRleTable(minValue, maxValue, minRepeats, maxRepeats);
 }
 
-template <typename F>
-inline void ForEachByteInFile(FILE* file, F f, size_t buffSize = 2048)
-{
-    std::vector<unsigned char> buff(buffSize);
-    size_t res = 0;
-    check_true( 0 == fseek(file, 0, SEEK_SET) );
-    while ((res = fread(&buff[0], 1, buff.size(), file)) > 0)
-    {
-        std::for_each(buff.begin(), buff.begin() + res, f);
-    }
-    check_true( feof(file) );
-}
-
-static void Compress(FILE* source, FILE* dest)
+static void Compress(IReadStream& source, ISequentialWriteStream& dest)
 {
     BitRleTable table;
     unsigned int cntBits = 0;
     
+    check_true( source.Seek(0) );
+    
     {
         BitRleScanner scanner;
         scanner.BeginScan();
-        ForEachByteInFile(source, [&](unsigned char b) { scanner.Scan(b); });
+        for (unsigned char b = 0; source.Read(&b, sizeof(b));) scanner.Scan(b);
         scanner.EndScan(table, cntBits);
     }
     
-    fseek(source, 0, SEEK_SET);
+    check_true( source.Seek(0) );
     
-    FileSequentialWriteStream ws(dest);
-    BitStreamWriter w(&ws);
+    BitStreamWriter w(&dest);
     
     CompressBitRleTable(w, table);
     check_true( w.WriteBits(cntBits) );
@@ -78,18 +66,15 @@ static void Compress(FILE* source, FILE* dest)
     
     BitRleCompressor compressor(table);
     compressor.BeginCompress(sink);
-    ForEachByteInFile(source, [&](unsigned char b) { compressor.Compress(b); });
+    for (unsigned char b = 0; source.Read(&b, sizeof(b));) compressor.Compress(b);
     compressor.EndCompress();
     
     check_true( w.CompleteByte() );
 }
 
-static void Decompress(FILE* source, FILE* dest)
-{
-    FileSequentialWriteStream ws(dest);
-    
-    FileSequentialReadStream rs(source);
-    BitStreamReader r(&rs);
+static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
+{    
+    BitStreamReader r(&source);
     
     const BitRleTable& table = DecompressBitRleTable(r);
     
@@ -112,7 +97,7 @@ static void Decompress(FILE* source, FILE* dest)
         buff.resize(repeats);
         for (unsigned int i = 0; i < repeats; ++i) buff[i] = value;
         
-        check_true( ws.Write(&buff[0], repeats) );
+        check_true( dest.Write(&buff[0], repeats) );
         
         c += table.GetValueLength() + table.GetRepeatsLength();
     }
@@ -134,7 +119,9 @@ bool BitRle::Compress(const char* source, const char* dest)
     
     try
     {
-        ::Compress(fileIn.get(), fileOut.get());
+        FileReadStream rs(fileIn.get());
+        FileSequentialWriteStream ws(fileOut.get());
+        ::Compress(rs, ws);
     }
     catch (std::exception&)
     {
@@ -158,7 +145,9 @@ bool BitRle::Decompress(const char* source, const char* dest)
     
     try
     {
-        ::Decompress(fileIn.get(), fileOut.get());
+        FileReadStream rs(fileIn.get());
+        FileSequentialWriteStream ws(fileOut.get());
+        ::Decompress(rs, ws);
     }
     catch (std::exception&)
     {

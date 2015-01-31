@@ -25,19 +25,21 @@ private:
 //
 //
 
-class ByteArraySequentialReadStream : public ISequentialReadStream
+class ByteArrayReadStream : public IReadStream
 {
 public:
-    ByteArraySequentialReadStream(std::vector<unsigned char>* buff);
+    ByteArrayReadStream(std::vector<unsigned char>* buff);
     
     virtual bool Read(void* data, unsigned int size);
+    virtual unsigned int GetPos();
+    virtual bool Seek(unsigned int pos);
 
 private:
-    ByteArraySequentialReadStream(const ByteArraySequentialReadStream&);
-    ByteArraySequentialReadStream& operator=(const ByteArraySequentialReadStream&);
+    ByteArrayReadStream(const ByteArrayReadStream&);
+    ByteArrayReadStream& operator=(const ByteArrayReadStream&);
     
     std::vector<unsigned char>* const m_buff;
-    size_t m_index;
+    unsigned int m_index;
 };
 
 //
@@ -62,16 +64,18 @@ private:
 //
 //
 
-class FileSequentialReadStream : public ISequentialReadStream
+class FileReadStream : public IReadStream
 {
 public:
-    FileSequentialReadStream(FILE* file);
+    FileReadStream(FILE* file);
     
     virtual bool Read(void* data, unsigned int size);
+    virtual unsigned int GetPos();
+    virtual bool Seek(unsigned int pos);
     
 private:
-    FileSequentialReadStream(const FileSequentialReadStream&);
-    FileSequentialReadStream& operator=(const FileSequentialReadStream&);
+    FileReadStream(const FileReadStream&);
+    FileReadStream& operator=(const FileReadStream&);
     
     FILE* const m_file;
 };
