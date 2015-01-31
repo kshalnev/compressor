@@ -16,11 +16,6 @@ enum { BitLeft = 1, BitRight = 0 };
 
 static const CodeLength ZeroCodeLength;
 
-bool operator==(const CodeLength& a, const CodeLength& b)
-{
-    return (a.code == b.code && a.length == b.length);
-}
-
 //
 //
 //

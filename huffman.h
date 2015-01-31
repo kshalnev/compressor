@@ -2,29 +2,14 @@
 
 #include <vector>
 #include <unordered_map>
+#include "common.h"
 #include "objstorage.h"
-
 
 //
 //
 //
 
 enum { ByteTypeCountValues = 256 };
-
-//
-//
-//
-
-struct CodeLength
-{
-public:
-    CodeLength() : code(0), length(0) {}
-    CodeLength(unsigned int Code, unsigned int Length) : code(Code), length(Length) {}
-    unsigned int code;
-    unsigned int length;
-};
-
-bool operator==(const CodeLength& a, const CodeLength& b);
 
 //
 //

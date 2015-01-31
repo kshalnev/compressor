@@ -1,60 +1,57 @@
-#include "compressor.h"
+#include "huffmancompressor.h"
+#include "bitrlecompressor.h"
 #include <iostream>
 
-int testCompressorResult(Compressor::Result res)
+typedef BitRle CompressorType;
+
+static void PrintUsage()
 {
-    switch (res)
-    {
-        case Compressor::Success:
-            std::cout << "Succeeded" << std::endl;
-            return 0;
-            
-        case Compressor::InvalidInputFile:
-            std::cout << "Invalid input file" << std::endl;
-            return -1;
-            
-        case Compressor::InvalidOutputFile:
-            std::cout << "Invalid output file" << std::endl;
-            return -1;
-            
-        case Compressor::InternalError:
-            std::cout << "Internal error" << std::endl;
-            return -1;
-            
-        case Compressor::IOError:
-            std::cout << "IO error" << std::endl;
-            return -1;
-            
-        default:
-            std::cout << "Unknown error" << std::endl;
-            return -1;
-    }
+    std::cout << "Arguments list for compression  : -c <compressor> <file path source> <file path destination>" << std::endl;
+    std::cout << "Arguments list for decompression: -d <compressor> <file path source> <file path destination>" << std::endl;
+    std::cout << "<compressor> can be 'bitrle' or 'huffman'" << std::endl;
 }
 
 int main(int argc, const char * argv[])
 {
-    int res = -1;
-    
-    bool paramsOk = false;
-    if (argc == 4)
+    if (argc != 5)
     {
-        if (0 == strcmp(argv[1], "-c"))
-        {
-            paramsOk = true;
-            res = testCompressorResult( Compressor::Compress(argv[2], argv[3]) );
-        }
-        else if (0 == strcmp(argv[1], "-d"))
-        {
-            paramsOk = true;
-            res = testCompressorResult( Compressor::Decompress(argv[2], argv[3]) );
-        }
+        PrintUsage();
+        return -1;
     }
     
-    if (!paramsOk)
+    bool doCompressing = false;
+    
+    if (0 == strcmp(argv[1], "-c"))
     {
-        std::cout << "Arguments list for compression  : -c <file path source> <file path destination>" << std::endl;
-        std::cout << "Arguments list for decompression: -d <file path source> <file path destination>" << std::endl;
+        doCompressing = true;
+    }
+    else if (0 == strcmp(argv[1], "-d"))
+    {
+        doCompressing = false;
+    }
+    else
+    {
+        PrintUsage();
+        return -1;
     }
     
-    return res;
+    bool res = false;
+    
+    if (0 == strcmp(argv[2], "bitrle"))
+    {
+        res = doCompressing ? BitRle::Compress(argv[3], argv[4]) : BitRle::Decompress(argv[3], argv[4]);
+    }
+    else if (0 == strcmp(argv[2], "huffman"))
+    {
+        res = doCompressing ? Huffman::Compress(argv[3], argv[4]) : Huffman::Decompress(argv[3], argv[4]);
+    }
+    else
+    {
+        PrintUsage();
+        return -1;
+    }
+    
+    std::cout << (res ? "Succeeded" : "Failed") << std::endl;
+    
+    return res ? 0 : -1;
 }

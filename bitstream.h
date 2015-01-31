@@ -1,12 +1,7 @@
 #pragma once
 
 #include "istream.h"
-
-//
-//
-//
-
-enum { BitsPerByte = 8 };
+#include "common.h"
 
 //
 //
@@ -20,6 +15,9 @@ public:
     bool ReadBytes(void* data, unsigned int countBytes);
     bool ReadBits(void* data, unsigned int countBits);
 
+    template <typename T>
+    bool ReadBits(T* value) { return ReadBits(value, sizeof(T) * BitsPerByte); }
+    
 private:
     bool Read(void* data, unsigned int size);
     
@@ -46,6 +44,9 @@ public:
     bool CompleteByte();
     bool IsByteComplete() const;
     
+    template <typename T>
+    bool WriteBits(const T& value) { return WriteBits(&value, sizeof(T) * BitsPerByte); }
+    
 private:
     bool Write(const void* data, unsigned int size);
     
@@ -57,15 +58,3 @@ private:
     unsigned char m_offset;
     ISequentialWriteStream* const m_stream;
 };
-
-//
-//
-//
-
-inline unsigned char CountBits(unsigned int value)
-{
-    if (0 == value) return 1;
-    unsigned char res = 0;
-    for (; 0 != value; ++res, value >>= 1);
-    return res;
-}
