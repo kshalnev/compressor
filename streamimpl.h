@@ -12,7 +12,7 @@ class ByteArraySequentialWriteStream : public ISequentialWriteStream
 public:
     ByteArraySequentialWriteStream(std::vector<unsigned char>* buff);
     
-    virtual bool Write(const void* data, unsigned int size);
+    virtual unsigned int Write(const void* data, unsigned int size);
     
 private:
     ByteArraySequentialWriteStream(const ByteArraySequentialWriteStream&);
@@ -30,7 +30,7 @@ class ByteArrayReadStream : public IReadStream
 public:
     ByteArrayReadStream(std::vector<unsigned char>* buff);
     
-    virtual bool Read(void* data, unsigned int size);
+    virtual unsigned int Read(void* data, unsigned int size);
     virtual unsigned int GetPos();
     virtual bool Seek(unsigned int pos);
 
@@ -51,7 +51,7 @@ class FileSequentialWriteStream : public ISequentialWriteStream
 public:
     FileSequentialWriteStream(FILE* file);
     
-    virtual bool Write(const void* data, unsigned int size);
+    virtual unsigned int Write(const void* data, unsigned int size);
     
 private:
     FileSequentialWriteStream(const FileSequentialWriteStream&);
@@ -69,7 +69,7 @@ class FileReadStream : public IReadStream
 public:
     FileReadStream(FILE* file);
     
-    virtual bool Read(void* data, unsigned int size);
+    virtual unsigned int Read(void* data, unsigned int size);
     virtual unsigned int GetPos();
     virtual bool Seek(unsigned int pos);
     

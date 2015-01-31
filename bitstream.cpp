@@ -13,17 +13,6 @@ BitStreamReader::BitStreamReader(ISequentialReadStream* stream)
     assert(nullptr != stream);
 }
 
-bool BitStreamReader::ReadBytes(void* data, unsigned int countBytes)
-{
-    assert(nullptr != data);
-    
-    if (!Read(data, countBytes))
-        return false;
-    m_holder = 0;
-    m_offset = BitsPerByte;
-    return true;
-}
-
 bool BitStreamReader::ReadBits(void* data, unsigned int countBits)
 {
     assert(nullptr != data);
@@ -73,7 +62,7 @@ bool BitStreamReader::ReadBits(void* data, unsigned int countBits)
 
 bool BitStreamReader::Read(void* data, unsigned int size)
 {
-    return m_stream->Read(data, size);
+    return (m_stream->Read(data, size) == size);
 }
 
 //
@@ -86,18 +75,6 @@ BitStreamWriter::BitStreamWriter(ISequentialWriteStream* stream)
 , m_stream(stream)
 {
     assert(nullptr != stream);
-}
-
-bool BitStreamWriter::WriteBytes(const void* data, unsigned int countBytes)
-{
-    assert(nullptr != data);
-    
-    if (!IsByteComplete())
-    {
-        if (!CompleteByte())
-            return false;
-    }
-    return Write(data, countBytes);
 }
 
 bool BitStreamWriter::WriteBits(const void* data, unsigned int countBits)
@@ -164,5 +141,5 @@ bool BitStreamWriter::IsByteComplete() const
 
 bool BitStreamWriter::Write(const void* data, unsigned int size)
 {
-    return m_stream->Write(data, size);
+    return (m_stream->Write(data, size) == size);
 }

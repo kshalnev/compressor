@@ -12,13 +12,13 @@ ByteArraySequentialWriteStream::ByteArraySequentialWriteStream(std::vector<unsig
     assert(nullptr != buff);
 }
 
-bool ByteArraySequentialWriteStream::Write(const void* data, unsigned int size)
+unsigned int ByteArraySequentialWriteStream::Write(const void* data, unsigned int size)
 {
     assert(nullptr != data);
     
     const unsigned char* b = reinterpret_cast<const unsigned char*>(data);
     std::copy(b, b + size, std::back_inserter(*m_buff));
-    return true;
+    return size;
 }
 
 //
@@ -32,20 +32,20 @@ ByteArrayReadStream::ByteArrayReadStream(std::vector<unsigned char>* buff)
     assert(nullptr != buff);
 }
 
-bool ByteArrayReadStream::Read(void* data, unsigned int size)
+unsigned int ByteArrayReadStream::Read(void* data, unsigned int size)
 {
     assert(nullptr != data);
     
     if (m_index >= m_buff->size())
-        return false;
+        return 0;
     
     if ((m_buff->size() - m_index) < size)
-        return false;
+        size = static_cast<unsigned int>(m_buff->size() - m_index);
     
     unsigned char* b = reinterpret_cast<unsigned char*>(data);
     std::copy(m_buff->begin() + m_index, m_buff->begin() + m_index + size, b);
     m_index += size;
-    return true;
+    return size;
 }
 
 unsigned int ByteArrayReadStream::GetPos()
@@ -71,12 +71,12 @@ FileSequentialWriteStream::FileSequentialWriteStream(FILE* file)
     assert(nullptr != m_file);
 }
 
-bool FileSequentialWriteStream::Write(const void* data, unsigned int size)
+unsigned int FileSequentialWriteStream::Write(const void* data, unsigned int size)
 {
     assert(nullptr != data);
     
     size_t res = fwrite(data, 1, size, m_file);
-    return (size == res);
+    return static_cast<unsigned int>(res);
 }
 
 //
@@ -89,12 +89,12 @@ FileReadStream::FileReadStream(FILE* file)
     assert(nullptr != file);
 }
 
-bool FileReadStream::Read(void* data, unsigned int size)
+unsigned int FileReadStream::Read(void* data, unsigned int size)
 {
     assert(nullptr != data);
     
     size_t res = fread(data, 1, size, m_file);
-    return (size == res);
+    return static_cast<unsigned int>(res);
 }
 
 unsigned int FileReadStream::GetPos()

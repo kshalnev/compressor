@@ -42,15 +42,15 @@ static void CompressHuffmanCodesTable(BitStreamWriter& w, const HuffmanCodeTable
     unsigned char lenBits = CountBits(maxLen - minLen);
     
     // write "header" of codes table
-    check_true( w.WriteBits(&cnt, BitsPerByte * sizeof(cnt)) );
-    check_true( w.WriteBits(&valueBits, BitsPerByte * sizeof(valueBits)) );
-    check_true( w.WriteBits(&codeBits, BitsPerByte * sizeof(codeBits)) );
-    check_true( w.WriteBits(&lenBits, BitsPerByte * sizeof(lenBits)) );
+    check_true( w.WriteBits(cnt) );
+    check_true( w.WriteBits(valueBits) );
+    check_true( w.WriteBits(codeBits) );
+    check_true( w.WriteBits(lenBits) );
     
     // write min values
-    check_true( w.WriteBits(&minValue, BitsPerByte * sizeof(minValue)) );
-    check_true( w.WriteBits(&minCode, BitsPerByte * sizeof(minCode)) );
-    check_true( w.WriteBits(&minLen, BitsPerByte * sizeof(minLen)) );
+    check_true( w.WriteBits(minValue) );
+    check_true( w.WriteBits(minCode) );
+    check_true( w.WriteBits(minLen) );
     
     // write codes table
     for (unsigned int i = 0; i < ByteTypeCountValues; ++i)
@@ -82,15 +82,15 @@ static void DecompressHuffmanCodesTable(BitStreamReader& r, HuffmanCodeTable& co
     unsigned int minLen = 0;
     
     // read "header" of codes table
-    check_true( r.ReadBits(&cnt, BitsPerByte * sizeof(cnt)) );
-    check_true( r.ReadBits(&valueBits, BitsPerByte * sizeof(valueBits)) );
-    check_true( r.ReadBits(&codeBits, BitsPerByte * sizeof(codeBits)) );
-    check_true( r.ReadBits(&lenBits, BitsPerByte * sizeof(lenBits)) );
+    check_true( r.ReadBits(&cnt) );
+    check_true( r.ReadBits(&valueBits) );
+    check_true( r.ReadBits(&codeBits) );
+    check_true( r.ReadBits(&lenBits) );
     
     // write min values
-    check_true( r.ReadBits(&minValue, BitsPerByte * sizeof(minValue)) );
-    check_true( r.ReadBits(&minCode, BitsPerByte * sizeof(minCode)) );
-    check_true( r.ReadBits(&minLen, BitsPerByte * sizeof(minLen)) );
+    check_true( r.ReadBits(&minValue) );
+    check_true( r.ReadBits(&minCode) );
+    check_true( r.ReadBits(&minLen) );
     
     // read codes table
     for (unsigned int i = 0; i < cnt; ++i)
@@ -114,7 +114,10 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
     {
         HuffmanScanner scanner;
         scanner.BeginScan();
-        for (unsigned char b = 0; source.Read(&b, sizeof(b));) scanner.Scan(b);
+        for (unsigned char b = 0; sizeof(b) == source.Read(&b, sizeof(b));)
+        {
+            scanner.Scan(b);
+        }
         scanner.EndScan(codes, cntBits);
     }
     
@@ -127,7 +130,7 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
         
         check_true( w.WriteBits(&cntBits, BitsPerByte * sizeof(cntBits)) );
         
-        for (unsigned char b = 0; source.Read(&b, sizeof(b));)
+        for (unsigned char b = 0; sizeof(b) == source.Read(&b, sizeof(b));)
         {
             const CodeLength& cl = codes.GetCodeLength(b);
             check_true( w.WriteBits(&cl.code, cl.length) );
@@ -156,7 +159,7 @@ static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& de
         unsigned char value = 0;
         if (HuffmanReader::Success == (res = reader.ReadBit(bit, &value)))
         {
-            check_true( dest.Write(&value, sizeof(value)) );
+            check_true( dest.Write(&value, sizeof(value)) == sizeof(value) );
         }
     }
     

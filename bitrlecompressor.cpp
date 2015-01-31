@@ -47,7 +47,10 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
     {
         BitRleScanner scanner;
         scanner.BeginScan();
-        for (unsigned char b = 0; source.Read(&b, sizeof(b));) scanner.Scan(b);
+        for (unsigned char b = 0; sizeof(b) == source.Read(&b, sizeof(b));)
+        {
+            scanner.Scan(b);
+        }
         scanner.EndScan(table, cntBits);
     }
     
@@ -66,7 +69,10 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
     
     BitRleCompressor compressor(table);
     compressor.BeginCompress(sink);
-    for (unsigned char b = 0; source.Read(&b, sizeof(b));) compressor.Compress(b);
+    for (unsigned char b = 0; sizeof(b) == source.Read(&b, sizeof(b));)
+    {
+        compressor.Compress(b);
+    }
     compressor.EndCompress();
     
     check_true( w.CompleteByte() );
@@ -97,7 +103,7 @@ static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& de
         buff.resize(repeats);
         for (unsigned int i = 0; i < repeats; ++i) buff[i] = value;
         
-        check_true( dest.Write(&buff[0], repeats) );
+        check_true( dest.Write(&buff[0], repeats) == repeats );
         
         c += table.GetValueLength() + table.GetRepeatsLength();
     }
