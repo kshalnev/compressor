@@ -38,7 +38,7 @@ private:
     T* Store(TPtr&& ptr)
     {
         m_objects.push_front(std::move(ptr));
-        return ptr.get();
+        return m_objects.front().get();
     }
     
     ObjectStorage(const ObjectStorage&);
