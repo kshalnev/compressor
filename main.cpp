@@ -1,8 +1,5 @@
-#include "huffmancompressor.h"
-#include "bitrlecompressor.h"
+#include "compressor.h"
 #include <iostream>
-
-typedef BitRle CompressorType;
 
 static void PrintUsage()
 {
@@ -18,16 +15,15 @@ int main(int argc, const char * argv[])
         PrintUsage();
         return -1;
     }
-    
-    bool doCompressing = false;
-    
+
+    bool compress = false;
     if (0 == strcmp(argv[1], "-c"))
     {
-        doCompressing = true;
+        compress = true;
     }
     else if (0 == strcmp(argv[1], "-d"))
     {
-        doCompressing = false;
+        compress = false;
     }
     else
     {
@@ -37,21 +33,25 @@ int main(int argc, const char * argv[])
     
     bool res = false;
     
-    if (0 == strcmp(argv[2], "bitrle"))
+    try
     {
-        res = doCompressing ? BitRle::Compress(argv[3], argv[4]) : BitRle::Decompress(argv[3], argv[4]);
+        if (compress)
+        {
+            Compress(argv[2], argv[3], argv[4]);
+        }
+        else
+        {
+            Decompress(argv[2], argv[3], argv[4]);
+        }
+        
+        res = true;
+        
+        std::cout << "Succeeded" << std::endl;
     }
-    else if (0 == strcmp(argv[2], "huffman"))
+    catch (std::exception& e)
     {
-        res = doCompressing ? Huffman::Compress(argv[3], argv[4]) : Huffman::Decompress(argv[3], argv[4]);
+        std::cout << "Exception: " << e.what() << std::endl;
     }
-    else
-    {
-        PrintUsage();
-        return -1;
-    }
-    
-    std::cout << (res ? "Succeeded" : "Failed") << std::endl;
     
     return res ? 0 : -1;
 }

@@ -104,7 +104,7 @@ static void DecompressHuffmanCodesTable(BitStreamReader& r, HuffmanCodeTable& co
     }
 }
 
-static void Compress(IReadStream& source, ISequentialWriteStream& dest)
+void Huffman::Compress(IReadStream& source, ISequentialWriteStream& dest)
 {
     HuffmanCodeTable codes;
     unsigned int cntBits = 0;
@@ -140,7 +140,7 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
     }
 }
 
-static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
+void Huffman::Decompress(IReadStream& source, ISequentialWriteStream& dest)
 {
     BitStreamReader r(&source);
     
@@ -164,56 +164,4 @@ static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& de
     }
     
     check_true( HuffmanReader::Success == res );
-}
-
-bool Huffman::Compress(const char* source, const char* dest)
-{
-    std::unique_ptr<FILE, decltype(&fclose)> fileIn(fopen(source, "rb"), &fclose);
-    
-    if (!fileIn)
-        return false;
-    
-    std::unique_ptr<FILE, decltype(&fclose)> fileOut(fopen(dest, "wb"), &fclose);
-    
-    if (!fileOut)
-        return false;
-    
-    try
-    {
-        FileReadStream rs(fileIn.get());
-        FileSequentialWriteStream ws(fileOut.get());
-        ::Compress(rs, ws);
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-    
-    return true;
-}
-
-bool Huffman::Decompress(const char* source, const char* dest)
-{
-    std::unique_ptr<FILE, decltype(&fclose)> fileIn(fopen(source, "rb"), &fclose);
-    
-    if (!fileIn)
-        return false;
-    
-    std::unique_ptr<FILE, decltype(&fclose)> fileOut(fopen(dest, "wb"), &fclose);
-    
-    if (!fileOut)
-        return false;
-    
-    try
-    {
-        FileReadStream rs(fileIn.get());
-        FileSequentialWriteStream ws(fileOut.get());
-        ::Decompress(rs, ws);
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-    
-    return true;
 }

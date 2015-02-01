@@ -1,8 +1,10 @@
 #pragma once
 
-class BitRle
+#include "icompressor.h"
+
+class BitRle : public ICompressor
 {
 public:
-    static bool Compress(const char* source, const char* dest);
-    static bool Decompress(const char* source, const char* dest);
+    virtual void Compress(IReadStream& source, ISequentialWriteStream& dest);
+    virtual void Decompress(IReadStream& source, ISequentialWriteStream& dest);
 };

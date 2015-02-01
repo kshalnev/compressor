@@ -37,7 +37,7 @@ static BitRleTable DecompressBitRleTable(BitStreamReader& r)
     return BitRleTable(minValue, maxValue, minRepeats, maxRepeats);
 }
 
-static void Compress(IReadStream& source, ISequentialWriteStream& dest)
+void BitRle::Compress(IReadStream& source, ISequentialWriteStream& dest)
 {
     BitRleTable table;
     unsigned int cntBits = 0;
@@ -78,7 +78,7 @@ static void Compress(IReadStream& source, ISequentialWriteStream& dest)
     check_true( w.CompleteByte() );
 }
 
-static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
+void BitRle::Decompress(IReadStream& source, ISequentialWriteStream& dest)
 {    
     BitStreamReader r(&source);
     
@@ -109,56 +109,4 @@ static void Decompress(ISequentialReadStream& source, ISequentialWriteStream& de
     }
     
     check_true( c == cntBits );
-}
-
-bool BitRle::Compress(const char* source, const char* dest)
-{
-    std::unique_ptr<FILE, decltype(&fclose)> fileIn(fopen(source, "rb"), &fclose);
-    
-    if (!fileIn)
-        return false;
-    
-    std::unique_ptr<FILE, decltype(&fclose)> fileOut(fopen(dest, "wb"), &fclose);
-    
-    if (!fileOut)
-        return false;
-    
-    try
-    {
-        FileReadStream rs(fileIn.get());
-        FileSequentialWriteStream ws(fileOut.get());
-        ::Compress(rs, ws);
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-    
-    return true;
-}
-
-bool BitRle::Decompress(const char* source, const char* dest)
-{
-    std::unique_ptr<FILE, decltype(&fclose)> fileIn(fopen(source, "rb"), &fclose);
-    
-    if (!fileIn)
-        return false;
-    
-    std::unique_ptr<FILE, decltype(&fclose)> fileOut(fopen(dest, "wb"), &fclose);
-    
-    if (!fileOut)
-        return false;
-    
-    try
-    {
-        FileReadStream rs(fileIn.get());
-        FileSequentialWriteStream ws(fileOut.get());
-        ::Decompress(rs, ws);
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-    
-    return true;
 }
