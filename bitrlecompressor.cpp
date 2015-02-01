@@ -81,7 +81,7 @@ void BitRle::Compress(IReadStream& source, ISequentialWriteStream& dest)
     check_true( w.CompleteByte() );
 }
 
-void BitRle::Decompress(IReadStream& source, ISequentialWriteStream& dest)
+void BitRle::Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
 {    
     BitStreamReader r(&source);
     

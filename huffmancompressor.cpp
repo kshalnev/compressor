@@ -148,7 +148,7 @@ void Huffman::Compress(IReadStream& source, ISequentialWriteStream& dest)
     }
 }
 
-void Huffman::Decompress(IReadStream& source, ISequentialWriteStream& dest)
+void Huffman::Decompress(ISequentialReadStream& source, ISequentialWriteStream& dest)
 {
     BitStreamReader r(&source);
     
