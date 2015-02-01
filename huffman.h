@@ -50,12 +50,15 @@ public:
 private:
     HuffmanScanner(const HuffmanScanner&);
     HuffmanScanner& operator=(const HuffmanScanner&);
-    
-    HuffmanCodeTable BuildCodesTable();
-    
-    enum State { state_none, state_scanning, state_scanned };
+
     struct Node;
     struct NodeCodeLength;
+    
+    HuffmanCodeTable BuildCodesTable() const;
+    Node* BuildTree(ObjectStorage<Node>& storage) const;
+    HuffmanCodeTable BuildCodesTableFromTree(Node* root) const;
+    
+    enum State { state_none, state_scanning, state_scanned };
     
     State m_state;
     std::vector<unsigned int> m_bytes;
@@ -81,6 +84,8 @@ private:
     HuffmanReader& operator=(const HuffmanReader&);
     
     struct Node;
+
+    static Node* RestoreTree(const HuffmanCodeTable& codes, ObjectStorage<Node>& storage);
     
     ObjectStorage<Node> m_storage;
     Node* m_root;

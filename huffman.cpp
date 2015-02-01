@@ -134,21 +134,22 @@ struct HuffmanScanner::Node
     unsigned int count;
 };
 
-struct HuffmanScanner::NodeCodeLength
-{
-    Node* node;
-    unsigned int len;
-    unsigned int code;
-};
-
-HuffmanCodeTable HuffmanScanner::BuildCodesTable()
+HuffmanCodeTable HuffmanScanner::BuildCodesTable() const
 {
     assert(m_count != 0);
     
     ObjectStorage<Node> storage;
     
+    Node* root = BuildTree(storage);
+    
+    return BuildCodesTableFromTree(root);
+}
+
+HuffmanScanner::Node* HuffmanScanner::BuildTree(ObjectStorage<Node>& storage) const
+{
     std::vector<Node*> v;
     v.reserve(m_count);
+    
     for (size_t i = 0, n = m_bytes.size(); i < n; ++i)
     {
         if (0 != m_bytes[i])
@@ -157,6 +158,7 @@ HuffmanCodeTable HuffmanScanner::BuildCodesTable()
             v.push_back(n);
         }
     }
+    
     std::sort(v.begin(), v.end(), [](const Node* a, const Node* b) { return a->count < b->count; });
     
     for (size_t i = 0; i < (v.size() - 1);)
@@ -174,17 +176,30 @@ HuffmanCodeTable HuffmanScanner::BuildCodesTable()
     }
     
     Node* root = v[v.size() - 1];
-    v.clear();
     
+    return root;
+}
+
+struct HuffmanScanner::NodeCodeLength
+{
+    Node* node;
+    unsigned int len;
+    unsigned int code;
+};
+
+HuffmanCodeTable HuffmanScanner::BuildCodesTableFromTree(Node* root) const
+{
     std::unordered_map<unsigned char, CodeLength> codes;
     codes.reserve(m_count);
     
     std::stack<NodeCodeLength> s;
+    
     NodeCodeLength n;
     n.node = root;
     n.len = 0;
     n.code = 0;
     s.push(n);
+    
     while (!s.empty())
     {
         NodeCodeLength n = s.top();
@@ -220,6 +235,18 @@ HuffmanCodeTable HuffmanScanner::BuildCodesTable()
 //
 //
 
+HuffmanReader::HuffmanReader(const HuffmanCodeTable& codes)
+: m_root(nullptr)
+, m_current(nullptr)
+{
+    ObjectStorage<Node> storage;
+
+    Node* root = RestoreTree(codes, storage);
+    
+    m_storage.swap(storage);
+    m_current = m_root = root;
+}
+
 struct HuffmanReader::Node
 {
     Node(unsigned char v = 0) : left(nullptr), right(nullptr), value(v) {}
@@ -229,12 +256,8 @@ struct HuffmanReader::Node
     unsigned char value;
 };
 
-HuffmanReader::HuffmanReader(const HuffmanCodeTable& codes)
-: m_root(nullptr)
-, m_current(nullptr)
+HuffmanReader::Node* HuffmanReader::RestoreTree(const HuffmanCodeTable& codes, ObjectStorage<Node>& storage)
 {
-    ObjectStorage<Node> storage;
-    
     Node* root = storage.NewObject();
     
     for (unsigned int i = 0; i < ByteTypeCountValues; ++i)
@@ -261,8 +284,7 @@ HuffmanReader::HuffmanReader(const HuffmanCodeTable& codes)
         n->value = i;
     }
     
-    m_storage.swap(storage);
-    m_current = m_root = root;
+    return root;
 }
 
 HuffmanReader::~HuffmanReader()
