@@ -75,7 +75,13 @@ unsigned int FileSequentialWriteStream::Write(const void* data, unsigned int siz
 {
     assert(nullptr != data);
     
-    size_t res = fwrite(data, 1, size, m_file);
+    const size_t res = fwrite(data, 1, size, m_file);
+    
+    if (res != size && 0 != ferror(m_file))
+    {
+        throw std::exception();
+    }
+    
     return static_cast<unsigned int>(res);
 }
 
@@ -93,14 +99,25 @@ unsigned int FileReadStream::Read(void* data, unsigned int size)
 {
     assert(nullptr != data);
     
-    size_t res = fread(data, 1, size, m_file);
+    const size_t res = fread(data, 1, size, m_file);
+    
+    if (0 == res && 0 != ferror(m_file))
+    {
+        throw std::exception();
+    }
+    
     return static_cast<unsigned int>(res);
 }
 
 unsigned int FileReadStream::GetPos()
 {
     const long pos = ftell(m_file);
-    if (pos < 0) return false;
+    
+    if (pos < 0)
+    {
+        throw std::exception();
+    }
+    
     return static_cast<unsigned int>(pos);
 }
 
