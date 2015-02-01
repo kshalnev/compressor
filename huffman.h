@@ -58,7 +58,7 @@ private:
     Node* BuildTree(ObjectStorage<Node>& storage) const;
     HuffmanCodeTable BuildCodesTableFromTree(Node* root) const;
     
-    enum State { state_none, state_scanning, state_scanned };
+    enum State { state_none, state_scanning };
     
     State m_state;
     std::vector<unsigned int> m_bytes;
