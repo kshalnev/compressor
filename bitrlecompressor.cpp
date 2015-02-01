@@ -34,6 +34,9 @@ static BitRleTable DecompressBitRleTable(BitStreamReader& r)
     check_true( r.ReadBits(&minRepeats) );
     check_true( r.ReadBits(&maxRepeats) );
     
+    check_true( minValue <= maxValue );
+    check_true( minRepeats <= maxRepeats );
+    
     return BitRleTable(minValue, maxValue, minRepeats, maxRepeats);
 }
 
@@ -84,10 +87,13 @@ void BitRle::Decompress(IReadStream& source, ISequentialWriteStream& dest)
     
     const BitRleTable& table = DecompressBitRleTable(r);
     
+    check_true( table.GetValueLength() <= 8 );
+    check_true( table.GetRepeatsLength() <= 8 );
+    
     unsigned int cntBits = 0;
     check_true( r.ReadBits(&cntBits) );
     
-    std::vector<unsigned char> buff;
+    std::vector<unsigned char> buff(256);
     
     unsigned int c = 0;
     while (c < cntBits)
@@ -97,10 +103,12 @@ void BitRle::Decompress(IReadStream& source, ISequentialWriteStream& dest)
         check_true( r.ReadBits(&value, table.GetValueLength()) );
         check_true( r.ReadBits(&repeats, table.GetRepeatsLength()) );
         
+        check_true( ((unsigned int)value + table.GetMinValue()) <= 255 );
+        check_true( ((unsigned int)repeats + table.GetMinRepeats()) <= 255 );
+        
         value += table.GetMinValue();
         repeats += table.GetMinRepeats();
         
-        buff.resize(repeats);
         for (unsigned int i = 0; i < repeats; ++i) buff[i] = value;
         
         check_true( dest.Write(&buff[0], repeats) == repeats );

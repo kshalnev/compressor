@@ -10,25 +10,23 @@
 class BitRleTable
 {
 public:
-    BitRleTable()
-    : m_minB(0), m_maxB(0), m_minRepeats(0), m_maxRepeats(0)
-    {}
-    BitRleTable(unsigned char minB, unsigned int maxB, unsigned int minRepeats, unsigned char maxRepeats)
-    : m_minB(minB), m_maxB(maxB), m_minRepeats(minRepeats), m_maxRepeats(maxRepeats)
-    {}
+    BitRleTable();
+    BitRleTable(unsigned char minB, unsigned int maxB, unsigned int minRepeats, unsigned char maxRepeats);
 
     unsigned char GetMinValue() const { return m_minB; }
     unsigned char GetMaxValue() const { return m_maxB; }
     unsigned char GetMinRepeats() const { return m_minRepeats; }
     unsigned char GetMaxRepeats() const { return m_maxRepeats; }
-    unsigned char GetValueLength() const { return CountBits(m_maxB - m_minB); }
-    unsigned char GetRepeatsLength() const { return CountBits(m_maxRepeats - m_minRepeats); }
+    unsigned char GetValueLength() const { return m_valueLength; }
+    unsigned char GetRepeatsLength() const { return m_repeatsLength; }
     
 private:
     unsigned char m_minB;
     unsigned char m_maxB;
     unsigned char m_minRepeats;
     unsigned char m_maxRepeats;
+    unsigned char m_valueLength;
+    unsigned char m_repeatsLength;
 };
 
 //

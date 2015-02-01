@@ -5,6 +5,23 @@
 //
 //
 
+BitRleTable::BitRleTable()
+: m_minB(0), m_maxB(0), m_minRepeats(0), m_maxRepeats(0), m_valueLength(0), m_repeatsLength(0)
+{}
+
+BitRleTable::BitRleTable(unsigned char minB, unsigned int maxB, unsigned int minRepeats, unsigned char maxRepeats)
+: m_minB(minB), m_maxB(maxB), m_minRepeats(minRepeats), m_maxRepeats(maxRepeats)
+, m_valueLength(CountBits(maxB - minB))
+, m_repeatsLength(CountBits(maxRepeats - minRepeats))
+{
+    assert(minB <= maxB);
+    assert(minRepeats <= maxRepeats);
+}
+
+//
+//
+//
+
 BitRleScanner::BitRleScanner()
 : m_state(state_none)
 , m_cnt(0)
