@@ -87,8 +87,8 @@ void BitRle::Decompress(IReadStream& source, ISequentialWriteStream& dest)
     
     const BitRleTable& table = DecompressBitRleTable(r);
     
-    check_true( table.GetValueLength() <= 8 );
-    check_true( table.GetRepeatsLength() <= 8 );
+    check_true( table.GetValueLength() <= BitsPerByte );
+    check_true( table.GetRepeatsLength() <= BitsPerByte );
     
     unsigned int cntBits = 0;
     check_true( r.ReadBits(&cntBits) );

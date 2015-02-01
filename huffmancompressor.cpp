@@ -87,6 +87,10 @@ static void DecompressHuffmanCodesTable(BitStreamReader& r, HuffmanCodeTable& co
     check_true( r.ReadBits(&codeBits) );
     check_true( r.ReadBits(&lenBits) );
     
+    check_true( valueBits <= BitsPerByte * sizeof(unsigned char) );
+    check_true( codeBits <= BitsPerByte * sizeof(unsigned int) );
+    check_true( lenBits <= BitsPerByte * sizeof(unsigned int) );
+    
     // write min values
     check_true( r.ReadBits(&minValue) );
     check_true( r.ReadBits(&minCode) );
@@ -95,12 +99,16 @@ static void DecompressHuffmanCodesTable(BitStreamReader& r, HuffmanCodeTable& co
     // read codes table
     for (unsigned int i = 0; i < cnt; ++i)
     {
-        unsigned char b = 0;
-        unsigned int c = 0, l = 0;
-        check_true( r.ReadBits(&b, valueBits) );
-        check_true( r.ReadBits(&c, codeBits) );
-        check_true( r.ReadBits(&l, lenBits) );
-        codes.SetCodeLength(b + minValue, CodeLength(c + minCode, l + minLen));
+        unsigned char value = 0;
+        unsigned int code = 0;
+        unsigned int len = 0;
+        check_true( r.ReadBits(&value, valueBits) );
+        check_true( r.ReadBits(&code, codeBits) );
+        check_true( r.ReadBits(&len, lenBits) );
+        
+        check_true( ((unsigned int)value + minValue) <= 255 );
+        
+        codes.SetCodeLength(value + minValue, CodeLength(code + minCode, len + minLen));
     }
 }
 
