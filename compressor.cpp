@@ -20,6 +20,10 @@ std::shared_ptr<ICompressor> GetCompressor(const char* compressorName)
     {
         return std::make_shared<Lzw>();
     }
+    else if (0 == strcmp(compressorName, "bitlzw"))
+    {
+        return std::make_shared<BitLzw>();
+    }
     return std::shared_ptr<ICompressor>();
 }
 
