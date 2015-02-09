@@ -1,5 +1,6 @@
 #include "huffmancompressor.h"
 #include "bitrlecompressor.h"
+#include "lzwcompressor.h"
 #include "streamimpl.h"
 #include <cassert>
 
@@ -15,7 +16,10 @@ std::shared_ptr<ICompressor> GetCompressor(const char* compressorName)
     {
         return std::make_shared<BitRle>();
     }
-    
+    else if (0 == strcmp(compressorName, "lzw"))
+    {
+        return std::make_shared<Lzw>();
+    }
     return std::shared_ptr<ICompressor>();
 }
 
